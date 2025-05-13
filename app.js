@@ -3,8 +3,10 @@ const cors = require('cors');
 const hotelRoutes = require('./routes/hotelRoutes');
 const authRoutes = require('./routes/authRoutes');
 const bookingRoutes = require('./routes/bookingRoutes');
-const adminRoutes = require('./routes/adminRoutes');
+const userRoutes = require('./routes/userRoutes');
 const errorHandler = require('./middleware/errorHandler');
+const path = require('path');
+const fs = require('fs');
 
 const app = express();
 
@@ -12,63 +14,45 @@ const app = express();
 const corsOptions = {
   origin: ['http://localhost:3000', 'http://localhost:3001', 'http://localhost:5173', 'http://localhost:8000', 'http://127.0.0.1:3000', 'http://127.0.0.1:5173'],
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'Admin-Authorization', 'Accept', 'X-Requested-With'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'Accept', 'X-Requested-With'],
   credentials: true,
-  exposedHeaders: ['Authorization', 'Admin-Authorization'],
+  exposedHeaders: ['Authorization'],
   optionsSuccessStatus: 200
 };
 
 // Middleware
 app.use(cors(corsOptions));
 app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
-// Admin credentials constants
-const ADMIN_USERNAME = 'admin@admin.com';
-const ADMIN_PASSWORD = 'admin123';
-const ADMIN_TOKEN = 'admin-token-secure-123456';
-
-// Direct admin login response for testing without DB
-app.post('/api/admin/direct-login', (req, res) => {
-  const { username, password } = req.body;
+// Special route for images - with explicit file handling
+app.get('/uploads/profile/:filename', (req, res) => {
+  const filePath = path.join(__dirname, 'public/uploads/profile', req.params.filename);
+  console.log('Image request for:', filePath);
   
-  if (username === ADMIN_USERNAME && password === ADMIN_PASSWORD) {
-    return res.json({
-      success: true,
-      message: 'Admin login successful',
-      token: ADMIN_TOKEN,
-      admin: {
-        username: ADMIN_USERNAME,
-        role: 'admin'
-      }
-    });
+  // Check if file exists
+  if (fs.existsSync(filePath)) {
+    console.log('File exists, sending...');
+    return res.sendFile(filePath);
+  } else {
+    console.log('File not found');
+    return res.status(404).send('Image not found');
   }
-  
-  return res.status(401).json({ message: 'Invalid admin credentials' });
 });
 
-// Verify admin token without DB
-app.get('/api/admin/direct-verify', (req, res) => {
-  const token = req.header('Admin-Authorization');
-  
-  if (token === ADMIN_TOKEN) {
-    return res.json({
-      success: true,
-      message: 'Admin token is valid',
-      admin: {
-        username: ADMIN_USERNAME,
-        role: 'admin'
-      }
-    });
-  }
-  
-  return res.status(401).json({ message: 'Admin token is not valid' });
+// Serve static files from public directory
+app.use('/static', express.static(path.join(__dirname, 'public')));
+// Log any static file requests for debugging
+app.use('/uploads', (req, res, next) => {
+  console.log(`Static file request: ${req.path}`);
+  next();
 });
 
 // Routes
 app.use('/api/hotels', hotelRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api/bookings', bookingRoutes);
-app.use('/api/admin', adminRoutes);
+app.use('/api/users', userRoutes);
 
 // Health check endpoint
 app.get('/health', (req, res) => {

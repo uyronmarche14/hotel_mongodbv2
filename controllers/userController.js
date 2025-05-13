@@ -1,8 +1,11 @@
 const User = require('../models/userModel');
 
+// User management functions are no longer accessible through admin routes
+// Users should be managed through the regular auth routes
+
 // @desc    Get all users
-// @route   GET /api/admin/users
-// @access  Admin
+// @route   GET /api/users (Protected)
+// @access  Private
 const getAllUsers = async (req, res) => {
   try {
     const users = await User.find().select('-password');
@@ -21,8 +24,8 @@ const getAllUsers = async (req, res) => {
 };
 
 // @desc    Get user by ID
-// @route   GET /api/admin/users/:id
-// @access  Admin
+// @route   GET /api/users/:id (Protected)
+// @access  Private
 const getUserById = async (req, res) => {
   try {
     const user = await User.findById(req.params.id).select('-password');
@@ -56,8 +59,8 @@ const getUserById = async (req, res) => {
 };
 
 // @desc    Update user
-// @route   PUT /api/admin/users/:id
-// @access  Admin
+// @route   PUT /api/users/:id (Protected)
+// @access  Private
 const updateUser = async (req, res) => {
   try {
     // Fields to update
@@ -119,8 +122,8 @@ const updateUser = async (req, res) => {
 };
 
 // @desc    Delete user
-// @route   DELETE /api/admin/users/:id
-// @access  Admin
+// @route   DELETE /api/users/:id (Protected)
+// @access  Private
 const deleteUser = async (req, res) => {
   try {
     const user = await User.findById(req.params.id);

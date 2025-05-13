@@ -15,17 +15,20 @@ router.post('/', bookingController.createBooking);
 // Get all bookings (optionally filtered by email)
 router.get('/', bookingController.getBookings);
 
-// Get a specific booking by ID
-router.get('/:id', bookingController.getBookingById);
-
-// Cancel a booking
-router.put('/:id/cancel', bookingController.cancelBooking);
+// Get booking summary (counts of upcoming and past bookings)
+router.get('/summary', bookingController.getBookingSummary);
 
 // Get booking history with stats
 router.get('/history', bookingController.getBookingHistory);
 
 // Get booking history for a specific user
 router.get('/history/:email', bookingController.getUserBookingHistory);
+
+// Get a specific booking by ID
+router.get('/:id', bookingController.getBookingById);
+
+// Cancel a booking
+router.put('/:id/cancel', bookingController.cancelBooking);
 
 // Health check endpoint
 router.get('/health', (req, res) => {

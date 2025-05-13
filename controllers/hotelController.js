@@ -97,8 +97,8 @@ exports.deleteHotel = async (req, res, next) => {
 };
 
 // @desc    Get all rooms
-// @route   GET /api/admin/rooms
-// @access  Admin
+// @route   GET /api/hotels/rooms
+// @access  Public
 const getAllRooms = async (req, res) => {
   try {
     const rooms = await Room.find();
@@ -118,8 +118,8 @@ const getAllRooms = async (req, res) => {
 };
 
 // @desc    Create a new room
-// @route   POST /api/admin/rooms
-// @access  Admin
+// @route   POST /api/hotels/rooms
+// @access  Public
 const createRoom = async (req, res) => {
   try {
     const {
@@ -180,8 +180,8 @@ const createRoom = async (req, res) => {
 };
 
 // @desc    Get room by ID
-// @route   GET /api/admin/rooms/:id
-// @access  Admin
+// @route   GET /api/hotels/rooms/:id
+// @access  Public
 const getRoomById = async (req, res) => {
   try {
     const room = await Room.findById(req.params.id);
@@ -215,8 +215,8 @@ const getRoomById = async (req, res) => {
 };
 
 // @desc    Update room
-// @route   PUT /api/admin/rooms/:id
-// @access  Admin
+// @route   PUT /api/hotels/rooms/:id
+// @access  Public
 const updateRoom = async (req, res) => {
   try {
     const {
@@ -291,8 +291,8 @@ const updateRoom = async (req, res) => {
 };
 
 // @desc    Delete room
-// @route   DELETE /api/admin/rooms/:id
-// @access  Admin
+// @route   DELETE /api/hotels/rooms/:id
+// @access  Public
 const deleteRoom = async (req, res) => {
   try {
     const room = await Room.findById(req.params.id);
@@ -327,7 +327,6 @@ const deleteRoom = async (req, res) => {
   }
 };
 
-// Add admin-specific functions to the module.exports at the bottom of the file
 module.exports = {
   getAllHotels: exports.getAllHotels,
   getHotelById: exports.getHotelById,

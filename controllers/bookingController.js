@@ -235,77 +235,77 @@ const cancelBooking = asyncHandler(async (req, res) => {
   }
 });
 
-// Get booking history with analytics
+// Get booking history with stats
 const getBookingHistory = asyncHandler(async (req, res) => {
   try {
-    // Query all bookings if admin, or just user's bookings if regular user
-    const query = req.user.role === 'admin' ? {} : { email: req.user.email };
+    // Get user email from authenticated user
+    const userEmail = req.user.email;
     
-    // Get all bookings
-    const allBookings = await Booking.find(query);
+    // Get all bookings for this user
+    const bookings = await Booking.find({ email: userEmail }).sort({ checkIn: -1 });
     
-    // Calculate stats
-    const totalBookings = allBookings.length;
-    const completedBookings = allBookings.filter(b => b.status === 'completed').length;
-    const cancelledBookings = allBookings.filter(b => b.status === 'cancelled').length;
-    const totalRevenue = allBookings
-      .filter(b => b.status !== 'cancelled')
-      .reduce((total, booking) => total + booking.totalPrice, 0);
-    
-    // Group bookings by room type
-    const roomTypes = {};
-    
-    allBookings.forEach(booking => {
-      const key = `${booking.roomType}-${booking.roomTitle}`;
-      
-      if (!roomTypes[key]) {
-        roomTypes[key] = {
-          roomType: booking.roomType,
-          roomTitle: booking.roomTitle,
-          count: 0,
-          totalRevenue: 0,
-          imageUrl: booking.roomImage,
-          bookings: []
-        };
-      }
-      
-      roomTypes[key].count++;
-      if (booking.status !== 'cancelled') {
-        roomTypes[key].totalRevenue += booking.totalPrice;
-      }
-      
-      // Add simplified booking data
-      roomTypes[key].bookings.push({
-        id: booking._id,
-        bookingId: booking.bookingId,
-        status: booking.status,
-        checkIn: booking.checkIn,
-        checkOut: booking.checkOut,
-        guests: booking.guests,
-        nights: booking.nights,
-        totalPrice: booking.totalPrice,
-        createdAt: booking.createdAt
-      });
-    });
-    
-    // Convert to array and sort by count
-    const roomStats = Object.values(roomTypes).sort((a, b) => b.count - a.count);
+    // Calculate some statistics
+    const stats = {
+      total: bookings.length,
+      cancelled: bookings.filter(b => b.status === 'cancelled').length,
+      completed: bookings.filter(b => b.status === 'completed').length,
+      upcoming: bookings.filter(b => new Date(b.checkIn) > new Date() && b.status !== 'cancelled').length,
+      totalSpent: bookings
+        .filter(b => b.status !== 'cancelled')
+        .reduce((sum, booking) => sum + (booking.totalPrice || 0), 0)
+    };
     
     res.status(200).json({
       success: true,
-      stats: {
-        totalBookings,
-        completedBookings,
-        cancelledBookings,
-        totalRevenue
-      },
-      roomStats
+      data: {
+        bookings,
+        stats
+      }
     });
   } catch (error) {
     console.error('Error getting booking history:', error);
     res.status(500).json({
       success: false,
-      message: 'Server error',
+      message: 'Failed to get booking history',
+      error: error.message
+    });
+  }
+});
+
+// Get booking summary (counts of upcoming and past bookings)
+const getBookingSummary = asyncHandler(async (req, res) => {
+  try {
+    // Get user ID from authenticated user
+    const userId = req.user.id;
+
+    // Current date
+    const now = new Date();
+    
+    // Count upcoming bookings (check-in date is in the future and not cancelled)
+    const upcomingBookings = await Booking.countDocuments({
+      user: userId,
+      checkIn: { $gt: now },
+      status: { $ne: 'cancelled' }
+    });
+    
+    // Count past bookings (check-out date is in the past)
+    const pastBookings = await Booking.countDocuments({
+      user: userId,
+      checkOut: { $lt: now }
+    });
+    
+    res.status(200).json({
+      success: true,
+      data: {
+        upcoming: upcomingBookings,
+        past: pastBookings
+      }
+    });
+  } catch (error) {
+    console.error('Error getting booking summary:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to get booking summary',
       error: error.message
     });
   }
@@ -494,4 +494,5 @@ module.exports = {
   getBookingHistory,
   getUserBookingHistory,
   checkAvailability,
+  getBookingSummary,
 }; 
