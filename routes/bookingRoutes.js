@@ -3,7 +3,10 @@ const router = express.Router();
 const bookingController = require('../controllers/bookingController');
 const { protect } = require('../middleware/authMiddleware');
 
-// All booking routes require authentication
+// Public route for checking availability
+router.get('/check-availability', bookingController.checkAvailability);
+
+// All other booking routes require authentication
 router.use(protect);
 
 // Create a new booking
