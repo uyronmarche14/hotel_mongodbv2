@@ -6,8 +6,23 @@ const hotelController = require('../controllers/hotelController');
 // GET all rooms
 router.get('/rooms', hotelController.getAllRooms);
 
+// GET top rated rooms
+router.get('/rooms/top-rated', hotelController.getTopRatedRooms);
+
+// GET one room from each category
+router.get('/rooms/categories/samples', hotelController.getCategorySamples);
+
+// GET search rooms
+router.get('/rooms/search', hotelController.searchRooms);
+
+// GET rooms by category
+router.get('/rooms/category/:category', hotelController.getRoomsByCategory);
+
 // POST create a new room
 router.post('/rooms', hotelController.createRoom);
+
+// GET check room availability
+router.get('/rooms/:id/availability', hotelController.checkRoomAvailability);
 
 // GET a single room
 router.get('/rooms/:id', hotelController.getRoomById);

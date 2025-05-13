@@ -7,6 +7,17 @@ const roomSchema = new mongoose.Schema({
     trim: true,
     maxlength: [100, 'Room title cannot be more than 100 characters']
   },
+  roomNumber: {
+    type: String,
+    trim: true,
+    unique: true,
+    sparse: true // This allows the field to be optional while maintaining uniqueness
+  },
+  type: {
+    type: String,
+    enum: ['standard', 'deluxe', 'suite', 'executive', 'family'],
+    default: 'standard'
+  },
   description: {
     type: String,
     trim: true,
@@ -25,6 +36,10 @@ const roomSchema = new mongoose.Schema({
     type: String,
     default: '/images/room-placeholder.jpg'
   },
+  images: {
+    type: [String],
+    default: []
+  },
   location: {
     type: String,
     default: 'Taguig, Metro Manila'
@@ -40,6 +55,16 @@ const roomSchema = new mongoose.Schema({
     max: [5, 'Rating cannot be more than 5'],
     default: 4.5
   },
+  reviews: {
+    type: Number,
+    default: 0,
+    min: 0
+  },
+  capacity: {
+    type: Number,
+    default: 1,
+    min: [1, 'Capacity must be at least 1']
+  },
   maxOccupancy: {
     type: Number,
     default: 2,
@@ -54,6 +79,10 @@ const roomSchema = new mongoose.Schema({
     type: String,
     default: '30 sq m'
   },
+  viewType: {
+    type: String,
+    default: 'City view'
+  },
   amenities: {
     type: [String],
     default: []
@@ -61,6 +90,10 @@ const roomSchema = new mongoose.Schema({
   additionalAmenities: {
     type: [String],
     default: ['WiFi', 'Air conditioning', 'Daily housekeeping', 'Mini bar']
+  },
+  features: {
+    type: [String],
+    default: []
   },
   isAvailable: {
     type: Boolean,
@@ -84,6 +117,14 @@ roomSchema.pre('save', function(next) {
     this.href = `/hotelRoomDetails/${this.category}/${this.title.toLowerCase().replace(/ /g, '-')}`;
   }
   next();
+});
+
+// Create a text index for searching
+roomSchema.index({ 
+  title: 'text', 
+  description: 'text', 
+  fullDescription: 'text',
+  category: 'text'
 });
 
 module.exports = mongoose.model('Room', roomSchema); 
