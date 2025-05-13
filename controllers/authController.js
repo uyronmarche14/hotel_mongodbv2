@@ -10,6 +10,12 @@ const generateToken = (id) => {
   });
 };
 
+// Admin credentials
+const ADMIN_CREDENTIALS = {
+  username: 'admin',
+  password: 'admin123'
+};
+
 // @desc    Register a new user
 // @route   POST /api/auth/register
 // @access  Public
@@ -249,6 +255,57 @@ exports.updateProfile = async (req, res) => {
   } catch (error) {
     console.error('====== UPDATE USER PROFILE ERROR ======');
     console.error(error);
+    res.status(500).json({ 
+      success: false,
+      message: 'Server Error',
+      error: error.message
+    });
+  }
+};
+
+// @desc    Admin login with hardcoded credentials
+// @route   POST /api/auth/admin-login
+// @access  Public
+exports.adminLogin = async (req, res) => {
+  try {
+    const { username, password } = req.body;
+
+    // Check if credentials match hardcoded values
+    if (username !== ADMIN_CREDENTIALS.username || password !== ADMIN_CREDENTIALS.password) {
+      return res.status(401).json({ 
+        success: false,
+        message: 'Invalid admin credentials' 
+      });
+    }
+
+    // Find or create admin user
+    let adminUser = await User.findOne({ email: 'admin@hotel.com' });
+    
+    if (!adminUser) {
+      // Create admin user if it doesn't exist
+      adminUser = await User.create({
+        name: 'Hotel Admin',
+        email: 'admin@hotel.com',
+        password: ADMIN_CREDENTIALS.password,
+        role: 'admin'
+      });
+    }
+
+    // Generate token for admin
+    const token = generateToken(adminUser._id);
+
+    res.status(200).json({
+      success: true,
+      user: {
+        id: adminUser._id,
+        name: adminUser.name,
+        email: adminUser.email,
+        role: adminUser.role,
+      },
+      token,
+    });
+  } catch (error) {
+    console.error('Admin login error:', error);
     res.status(500).json({ 
       success: false,
       message: 'Server Error',

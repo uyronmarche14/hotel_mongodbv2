@@ -10,6 +10,9 @@ router.post('/register', authController.register);
 // Login user
 router.post('/login', authController.login);
 
+// Admin login (hardcoded credentials)
+router.post('/admin-login', authController.adminLogin);
+
 // Get user data
 router.get('/me', protect, authController.getMe);
 
