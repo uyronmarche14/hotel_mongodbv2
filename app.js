@@ -11,9 +11,9 @@ const fs = require('fs');
 
 const app = express();
 
-// Updated CORS configuration to allow all origins in development
+// CORS configuration
 const corsOptions = {
-  origin: '*', // Allow all origins in development
+  origin: ['http://localhost:3000', 'http://localhost:3001', 'http://localhost:5173', 'http://localhost:8000', 'http://127.0.0.1:3000', 'http://127.0.0.1:5173'],
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'Accept', 'X-Requested-With'],
   credentials: true,
@@ -27,7 +27,7 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 // Special route for images - with explicit file handling
-app.use('/uploads/profile/:filename', (req, res) => {
+app.get('/uploads/profile/:filename', (req, res) => {
   const filePath = path.join(__dirname, 'public/uploads/profile', req.params.filename);
   console.log('Image request for:', filePath);
   
