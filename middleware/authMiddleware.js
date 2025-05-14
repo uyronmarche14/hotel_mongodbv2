@@ -1,8 +1,16 @@
 const jwt = require('jsonwebtoken');
 const User = require('../models/userModel');
 
-// Use a hardcoded secret instead of env variable
-const DEFAULT_SECRET = 'hotel_system_default_secret_2023';
+// Use environment variable for JWT secret with fallback for development
+const JWT_SECRET = process.env.JWT_SECRET || 'hotel_system_default_secret_2023';
+
+// Log warning if using default secret
+if (!process.env.JWT_SECRET) {
+  console.warn('WARNING: Using default JWT secret. This is insecure and should only be used in development.');
+  if (process.env.NODE_ENV === 'production') {
+    console.error('CRITICAL SECURITY WARNING: Using default JWT secret in PRODUCTION environment!');
+  }
+}
 
 exports.protect = async (req, res, next) => {
   let token;
@@ -28,7 +36,7 @@ exports.protect = async (req, res, next) => {
       }
 
       // Verify token
-      const decoded = jwt.verify(token, DEFAULT_SECRET);
+      const decoded = jwt.verify(token, JWT_SECRET);
       console.log('Token decoded successfully, user ID:', decoded.id);
 
       // Get user from the token
@@ -46,25 +54,38 @@ exports.protect = async (req, res, next) => {
       req.user = user;
       next();
     } catch (error) {
-      console.error('Auth middleware error:', error.message);
+      console.error('Auth middleware error:', error.name, error.message);
       
+      // Detailed error handling for different types of JWT errors
       if (error.name === 'JsonWebTokenError') {
         return res.status(401).json({
           success: false,
-          message: 'Invalid token',
+          message: 'Invalid token format or signature',
+          code: 'INVALID_TOKEN'
         });
       }
       
       if (error.name === 'TokenExpiredError') {
         return res.status(401).json({
           success: false,
-          message: 'Token expired',
+          message: 'Your session has expired, please log in again',
+          code: 'TOKEN_EXPIRED'
         });
       }
       
+      if (error.name === 'NotBeforeError') {
+        return res.status(401).json({
+          success: false,
+          message: 'Token not yet valid',
+          code: 'TOKEN_NOT_ACTIVE'
+        });
+      }
+      
+      // Generic authorization failure
       res.status(401).json({
         success: false,
-        message: 'Not authorized, token failed',
+        message: 'Authentication failed',
+        code: 'AUTH_FAILED'
       });
     }
   } else {

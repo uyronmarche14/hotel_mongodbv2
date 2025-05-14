@@ -1,5 +1,6 @@
 const express = require('express');
 const cors = require('cors');
+const cookieParser = require('cookie-parser');
 const hotelRoutes = require('./routes/hotelRoutes');
 const authRoutes = require('./routes/authRoutes');
 const bookingRoutes = require('./routes/bookingRoutes');
@@ -25,6 +26,7 @@ const corsOptions = {
 app.use(cors(corsOptions));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+app.use(cookieParser()); // Parse cookies for token refresh
 
 // Special route for images - with explicit file handling
 app.get('/uploads/profile/:filename', (req, res) => {
