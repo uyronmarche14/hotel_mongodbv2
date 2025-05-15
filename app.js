@@ -15,7 +15,7 @@ const app = express();
 // CORS configuration
 const corsOptions = {
   origin: process.env.NODE_ENV === 'production' 
-    ? ['https://hotel-mongodbv2-3.onrender.com', 'http://localhost:3000', 'http://localhost:10000', 'http://localhost:5173', 'http://localhost:8000', 'http://127.0.0.1:3000', 'http://127.0.0.1:5173'] 
+    ? ['https://solace-hotr.onrender.com', "https://solace-hotr.onrender.com", 'http://localhost:3000', 'http://localhost:10000', 'http://localhost:5173', 'http://localhost:8000', 'http://127.0.0.1:3000', 'http://127.0.0.1:5173'] 
     : true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'Accept', 'X-Requested-With'],
