@@ -14,17 +14,9 @@ const app = express();
 
 // CORS configuration
 const corsOptions = {
-  origin: [
-    'https://solace-hotel.netlify.app',  // Add your Netlify domain here
-    'https://hotel-mongodbv2-3.onrender.com',
-    'https://hotel-mongodbv2-2.onrender.com',
-    'http://localhost:3000',
-    'http://localhost:10000',
-    'http://localhost:5173', 
-    'http://localhost:8000', 
-    'http://127.0.0.1:3000', 
-    'http://127.0.0.1:5173'
-  ],
+  origin: process.env.NODE_ENV === 'production' 
+    ? ['https://hotel-mongodbv2-3.onrender.com', 'http://localhost:3000', 'http://localhost:10000', 'http://localhost:5173', 'http://localhost:8000', 'http://127.0.0.1:3000', 'http://127.0.0.1:5173'] 
+    : true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'Accept', 'X-Requested-With'],
   credentials: true,
@@ -32,20 +24,11 @@ const corsOptions = {
   optionsSuccessStatus: 200
 };
 
-// Handle OPTIONS preflight requests
-app.options('*', cors(corsOptions));
-
 // Middleware
 app.use(cors(corsOptions));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser()); // Parse cookies for token refresh
-
-// Request logging middleware
-app.use((req, res, next) => {
-  console.log(`[${new Date().toISOString()}] ${req.method} ${req.path} - Origin: ${req.headers.origin || 'none'}`);
-  next();
-});
 
 // Special route for images - with explicit file handling
 app.get('/uploads/profile/:filename', (req, res) => {
@@ -80,15 +63,6 @@ app.use('/api/admin', adminRoutes);
 // Health check endpoint
 app.get('/health', (req, res) => {
   res.status(200).json({ status: 'OK', message: 'API server is up and running' });
-});
-
-// Debug route for CORS testing
-app.get('/api/cors-test', (req, res) => {
-  res.json({
-    message: 'CORS is working correctly!',
-    origin: req.headers.origin || 'No origin header',
-    headers: req.headers
-  });
 });
 
 // Debug route to show request info
