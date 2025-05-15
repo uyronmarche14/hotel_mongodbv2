@@ -79,4 +79,14 @@ app.get('/debug', (req, res) => {
 // Error handler
 app.use(errorHandler);
 
-module.exports = app;
+// Allow direct execution (for platforms like Render that run 'node app.js')
+if (require.main === module) {
+  const PORT = process.env.PORT || 5000;
+  app.listen(PORT, '0.0.0.0', () => {
+    console.log(`Server running on http://0.0.0.0:${PORT} 🚀`);
+    console.log(`Server accessible at http://localhost:${PORT}`);
+  });
+} else {
+  // Export for use by server.js
+  module.exports = app;
+}
