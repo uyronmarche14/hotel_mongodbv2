@@ -64,12 +64,43 @@ exports.getDashboardStats = async (req, res) => {
 // @access  Private/Admin
 exports.getAllUsers = async (req, res) => {
   try {
-    const users = await User.find().select('-password').sort('-createdAt');
+    // Get all users with complete profile information
+    const users = await User.find()
+      .select('-password')
+      .sort('-createdAt')
+      .lean(); // For better performance
+    
+    // Enhance user data with additional information
+    const enhancedUsers = await Promise.all(users.map(async (user) => {
+      // Get booking count for each user
+      const bookingCount = await Booking.countDocuments({ user: user._id });
+      
+      // Calculate total spent from all non-cancelled bookings
+      const spending = await Booking.aggregate([
+        { $match: { user: user._id, status: { $ne: 'cancelled' } } },
+        { $group: { _id: null, total: { $sum: '$totalPrice' } } }
+      ]);
+      
+      // Get most recent booking
+      const recentBooking = await Booking.findOne({ user: user._id })
+        .sort('-createdAt')
+        .select('createdAt status totalPrice')
+        .lean();
+      
+      return {
+        ...user,
+        statistics: {
+          bookingCount,
+          totalSpent: spending.length > 0 ? spending[0].total : 0,
+          recentBooking: recentBooking || null
+        }
+      };
+    }));
     
     res.status(200).json({
       success: true,
-      count: users.length,
-      data: users
+      count: enhancedUsers.length,
+      data: enhancedUsers
     });
   } catch (error) {
     console.error('Admin get all users error:', error);
@@ -88,12 +119,32 @@ exports.getAllBookings = async (req, res) => {
   try {
     const bookings = await Booking.find()
       .sort('-createdAt')
-      .populate('user', 'name email');
+      .populate('user', 'name email profilePic role')
+      .lean(); // Use lean() for better performance with large datasets
+    
+    // Get room details for each booking if needed
+    const bookingsWithDetails = await Promise.all(bookings.map(async (booking) => {
+      if (booking.roomId) {
+        try {
+          const room = await Room.findById(booking.roomId).lean();
+          if (room) {
+            booking.roomDetails = {
+              roomNumber: room.roomNumber || '',
+              type: room.type || '',
+              title: room.title || ''
+            };
+          }
+        } catch (error) {
+          console.error('Error fetching room details:', error);
+        }
+      }
+      return booking;
+    }));
     
     res.status(200).json({
       success: true,
-      count: bookings.length,
-      data: bookings
+      count: bookingsWithDetails.length,
+      data: bookingsWithDetails
     });
   } catch (error) {
     console.error('Admin get all bookings error:', error);
