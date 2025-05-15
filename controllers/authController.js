@@ -378,7 +378,7 @@ exports.adminLogin = async (req, res) => {
     }
 
     // Generate token for admin
-    const token = generateToken(adminUser._id);
+    const token = generateAccessToken(adminUser._id);
 
     res.status(200).json({
       success: true,
